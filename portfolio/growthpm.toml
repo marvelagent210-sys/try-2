@@ -1,0 +1,12 @@
+# Config used by the scheduled GitHub Actions workflow (.github/workflows/manage.yml).
+# The ledger and one report per cycle are committed under portfolio/.
+
+[universe]
+preset = "growth"
+
+[account]
+broker = "paper"               # "alpaca" + repo secrets APCA_API_KEY_ID / APCA_API_SECRET_KEY
+alpaca_paper = true
+starting_cash = 100000
+state_file = "portfolio/state.json"
+reports_dir = "portfolio/reports"

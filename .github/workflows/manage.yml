@@ -1,0 +1,42 @@
+name: manage portfolio
+
+# Runs one management cycle on live Yahoo Finance data every weekday shortly
+# before the US close, then commits the updated ledger and report so the
+# portfolio's history lives in the repository.
+# 19:30 UTC = 15:30 New York in summer (EDT), 14:30 in winter (EST).
+on:
+  schedule:
+    - cron: "30 19 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manage-portfolio
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Management cycle
+        env:
+          # Only used when portfolio/growthpm.toml sets broker = "alpaca".
+          APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+          APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+        run: |
+          growthpm run --config portfolio/growthpm.toml --execute | tee "$GITHUB_STEP_SUMMARY"
+          cp "$(ls -t portfolio/reports/*.md | head -1)" portfolio/LATEST.md
+      - name: Commit ledger and report
+        run: |
+          git config user.name "growthpm bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add portfolio/
+          git diff --cached --quiet || git commit -m "portfolio: cycle $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
