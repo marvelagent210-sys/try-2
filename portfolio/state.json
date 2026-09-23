@@ -11,13 +11,13 @@
       "shares": 79.727769,
       "entry_date": "2026-09-23",
       "entry_price": 249.59935610961912,
-      "peak_price": 249.35000610351562
+      "peak_price": 262.489990234375
     },
     "MU": {
       "shares": 19.04299,
       "entry_date": "2026-09-23",
       "entry_price": 1045.0039208984374,
-      "peak_price": 1043.9599609375
+      "peak_price": 1071.8800048828125
     },
     "AAPL": {
       "shares": 51.33624,
@@ -29,7 +29,7 @@
       "shares": 41.282251,
       "entry_date": "2026-09-23",
       "entry_price": 372.1317697753906,
-      "peak_price": 371.760009765625
+      "peak_price": 393.29998779296875
     },
     "SNOW": {
       "shares": 20.65821,
@@ -47,6 +47,15 @@
       "cash": 500.0,
       "regime": "risk_on",
       "executed": true,
+      "synthetic": false
+    },
+    {
+      "time": "2026-09-23T22:25:44",
+      "price_date": "2026-09-23",
+      "equity": 102144.49,
+      "cash": 500.0,
+      "regime": "risk_on",
+      "executed": false,
       "synthetic": false
     }
   ],
