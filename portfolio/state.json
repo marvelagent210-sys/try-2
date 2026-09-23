@@ -1,0 +1,104 @@
+{
+  "cash": 500.00143353234034,
+  "holdings": {
+    "AMD": {
+      "shares": 32.298088,
+      "entry_date": "2026-09-23",
+      "entry_price": 616.1355395507812,
+      "peak_price": 615.52001953125
+    },
+    "CRWD": {
+      "shares": 79.727769,
+      "entry_date": "2026-09-23",
+      "entry_price": 249.59935610961912,
+      "peak_price": 249.35000610351562
+    },
+    "MU": {
+      "shares": 19.04299,
+      "entry_date": "2026-09-23",
+      "entry_price": 1045.0039208984374,
+      "peak_price": 1043.9599609375
+    },
+    "AAPL": {
+      "shares": 51.33624,
+      "entry_date": "2026-09-23",
+      "entry_price": 339.3189909973144,
+      "peak_price": 338.9800109863281
+    },
+    "PANW": {
+      "shares": 41.282251,
+      "entry_date": "2026-09-23",
+      "entry_price": 372.1317697753906,
+      "peak_price": 371.760009765625
+    },
+    "SNOW": {
+      "shares": 20.65821,
+      "entry_date": "2026-09-23",
+      "entry_price": 339.7294046630859,
+      "peak_price": 339.3900146484375
+    }
+  },
+  "cooldown": {},
+  "history": [
+    {
+      "time": "2026-09-23T07:24:47",
+      "price_date": "2026-09-21",
+      "equity": 99900.6,
+      "cash": 500.0,
+      "regime": "risk_on",
+      "executed": true,
+      "synthetic": false
+    }
+  ],
+  "trades": [
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "AMD",
+      "side": "buy",
+      "shares": 32.298088,
+      "price": 616.1355,
+      "reason": "new opportunity: momentum rank #2 (z +2.4), expected 66%/yr, vol 71%"
+    },
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "CRWD",
+      "side": "buy",
+      "shares": 79.727769,
+      "price": 249.5994,
+      "reason": "new opportunity: momentum rank #3 (z +1.9), expected 47%/yr, vol 73%"
+    },
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "MU",
+      "side": "buy",
+      "shares": 19.04299,
+      "price": 1045.0039,
+      "reason": "new opportunity: momentum rank #1 (z +2.1), expected 72%/yr, vol 89%"
+    },
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "AAPL",
+      "side": "buy",
+      "shares": 51.33624,
+      "price": 339.319,
+      "reason": "new opportunity: momentum rank #17 (z +1.1), expected 14%/yr, vol 31%"
+    },
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "PANW",
+      "side": "buy",
+      "shares": 41.282251,
+      "price": 372.1318,
+      "reason": "new opportunity: momentum rank #4 (z +1.8), expected 39%/yr, vol 63%"
+    },
+    {
+      "time": "2026-09-23T07:24:47",
+      "ticker": "SNOW",
+      "side": "buy",
+      "shares": 20.65821,
+      "price": 339.7294,
+      "reason": "new opportunity: momentum rank #5 (z +2.0), expected 36%/yr, vol 51%"
+    }
+  ],
+  "created": "2026-09-23T07:24:47"
+}
