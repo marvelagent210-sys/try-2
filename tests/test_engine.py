@@ -4,7 +4,7 @@ import pytest
 from growthpm.cli import main
 from growthpm.config import Config
 from growthpm.data import SyntheticProvider
-from growthpm.engine import run_once, us_market_open
+from growthpm.engine import last_session, run_once, us_market_open
 from growthpm.portfolio import PortfolioState
 
 from .conftest import END
@@ -62,3 +62,36 @@ def test_market_hours():
     assert not us_market_open(pd.Timestamp("2026-06-30 08:00", tz="America/New_York"))
     assert not us_market_open(pd.Timestamp("2026-06-27 12:00", tz="America/New_York"))  # Saturday
     assert us_market_open(pd.Timestamp("2026-06-30 15:00", tz="UTC"))                   # 11:00 NY
+
+
+class LiveLikeProvider(SyntheticProvider):
+    """Synthetic prices that the engine treats as real market data."""
+    is_synthetic = False
+
+
+@pytest.mark.parametrize("now, reason", [
+    ("2026-07-02 10:00", "stale prices"),     # Thursday session open, newest bar is Tuesday
+    ("2026-06-30 18:00", "market closed"),    # after the close: no paper fills at a stale close
+    ("2026-07-01 08:00", "market closed"),    # Wednesday pre-open: Tuesday's bar is fresh, but no fills yet
+])
+def test_real_data_guards_block_execution(workdir, etf_cfg, now, reason):
+    result = run_once(etf_cfg, LiveLikeProvider(seed=3, end=END), execute=True, now=pd.Timestamp(now))
+    assert result.orders and not result.fills
+    assert reason in result.report and "NOT EXECUTED" in result.report
+    state = PortfolioState.load(workdir / "portfolio_state.json")
+    assert not state.holdings and reason in state.history[-1]["blocked"]
+
+
+def test_fresh_prices_during_session_trade(workdir, etf_cfg):
+    result = run_once(etf_cfg, LiveLikeProvider(seed=3, end=END), execute=True,
+                      now=pd.Timestamp("2026-06-30 15:45"))
+    assert result.fills and "EXECUTED on paper broker" in result.report
+
+
+def test_last_session():
+    ny = "America/New_York"
+    assert last_session(pd.Timestamp("2026-09-23 03:24", tz=ny)) == pd.Timestamp("2026-09-22")
+    assert last_session(pd.Timestamp("2026-09-23 07:24", tz="UTC")) == pd.Timestamp("2026-09-22")
+    assert last_session(pd.Timestamp("2026-09-23 10:00", tz=ny)) == pd.Timestamp("2026-09-23")
+    assert last_session(pd.Timestamp("2026-09-26 12:00", tz=ny)) == pd.Timestamp("2026-09-25")  # Saturday
+    assert last_session(pd.Timestamp("2026-09-28 08:00", tz=ny)) == pd.Timestamp("2026-09-25")  # Monday pre-open

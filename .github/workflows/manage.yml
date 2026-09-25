@@ -1,12 +1,15 @@
 name: manage portfolio
 
-# Runs one management cycle on live Yahoo Finance data every weekday shortly
-# before the US close, then commits the updated ledger and report so the
-# portfolio's history lives in the repository.
-# 19:30 UTC = 15:30 New York in summer (EDT), 14:30 in winter (EST).
+# Runs a management cycle on live Yahoo Finance data three times each weekday
+# session, then commits the updated ledger and report so the portfolio's
+# history lives in the repository. GitHub often starts scheduled jobs hours
+# late, so several slots keep at least one inside market hours; a run that
+# lands outside the session (or gets stale prices) records the report but
+# does not trade.
+# 15/17/19 UTC = 11:00/13:00/15:00 New York in summer (EDT), 10/12/14 in winter.
 on:
   schedule:
-    - cron: "30 19 * * 1-5"
+    - cron: "0 15,17,19 * * 1-5"
   workflow_dispatch:
 
 permissions:

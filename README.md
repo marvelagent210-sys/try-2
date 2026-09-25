@@ -75,10 +75,15 @@ Pick one:
 |---|---|
 | **Watch loop** | `growthpm watch --execute --interval 60` runs a cycle every hour while the NYSE is open. |
 | **Cron** | `35 15 * * 1-5 cd /path/to/repo && growthpm run --execute` (machine in New York time; one cycle near the close). |
-| **GitHub Actions** | `.github/workflows/manage.yml` runs a cycle every weekday before the close on GitHub's runners and commits `portfolio/state.json` plus a report to the repo (`portfolio/LATEST.md`). It activates once the workflow is on the default branch; run it by hand from the Actions tab. |
+| **GitHub Actions** | `.github/workflows/manage.yml` runs a cycle three times each weekday session (GitHub often starts scheduled jobs hours late, so several slots keep one inside market hours) and commits `portfolio/state.json` plus a report (`portfolio/LATEST.md`). Run it by hand from the Actions tab. |
 
 A once-a-day cycle near the close is the recommended cadence. The signals are
 daily, and intraday runs mainly let the trailing stops react faster.
+
+With real data, `--execute` refuses to trade (and says why in the report) when
+the newest price bar is older than the last session that has opened, or when a
+paper order would fill while the market is closed. Either would give the ledger
+fills at prices nobody could actually trade at.
 
 ### Real brokerage (Alpaca)
 

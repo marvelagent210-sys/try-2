@@ -41,11 +41,41 @@ def make_broker(cfg: Config, state: PortfolioState) -> Broker:
     return PaperBroker(state, cfg.execution.trade_cost_bps)
 
 
+def _new_york(now: pd.Timestamp | None) -> pd.Timestamp:
+    """`now` in New York time; a naive timestamp is taken to already be New York time."""
+    now = pd.Timestamp.now(tz=NEW_YORK) if now is None else pd.Timestamp(now)
+    return now.tz_localize(NEW_YORK) if now.tzinfo is None else now.tz_convert(NEW_YORK)
+
+
 def us_market_open(now: pd.Timestamp | None = None) -> bool:
     """Regular NYSE session, Mon-Fri 09:30-16:00 New York time (exchange holidays not modelled)."""
-    now = pd.Timestamp.now(tz=NEW_YORK) if now is None else pd.Timestamp(now)
-    ny = now.tz_localize(NEW_YORK) if now.tzinfo is None else now.tz_convert(NEW_YORK)
+    ny = _new_york(now)
     return ny.weekday() < 5 and dtime(9, 30) <= ny.time() <= dtime(16, 0)
+
+
+def last_session(now: pd.Timestamp | None = None) -> pd.Timestamp:
+    """Date of the most recent NYSE session that has opened by `now`, i.e. the newest
+    daily bar fresh data must contain (exchange holidays not modelled)."""
+    ny = _new_york(now)
+    day = pd.Timestamp(ny.date())
+    if ny.weekday() < 5 and ny.time() >= dtime(9, 30):
+        return day
+    return day - pd.offsets.BDay(1)
+
+
+def _trading_blocked(provider: PriceProvider, broker: Broker, price_date: pd.Timestamp,
+                     clock: pd.Timestamp | None) -> str | None:
+    """Why orders must not be sent right now, or None. Synthetic data is a simulation
+    and skips these real-market checks."""
+    if provider.is_synthetic:
+        return None
+    expected = last_session(clock)
+    if price_date < expected:
+        return (f"stale prices: newest bar is {price_date:%Y-%m-%d} but the "
+                f"{expected:%Y-%m-%d} session has already opened")
+    if getattr(broker, "name", "") == "paper" and not us_market_open(clock):
+        return "market closed: paper orders only fill during the regular session"
+    return None
 
 
 def _latest_vix(provider: PriceProvider, symbol: str) -> float | None:
@@ -62,7 +92,9 @@ def _latest_vix(provider: PriceProvider, symbol: str) -> float | None:
 def run_once(cfg: Config, provider: PriceProvider, *, execute: bool = False,
              state_path: str | Path | None = None, broker: Broker | None = None,
              now: pd.Timestamp | None = None, write_report: bool = True) -> RunResult:
-    now = now or pd.Timestamp.now()
+    """`now` (default: the current time) is New York time when naive."""
+    clock = now
+    now = _new_york(now).tz_localize(None)
     state_path = Path(state_path or cfg.account.state_file)
     state = PortfolioState.load(state_path) or PortfolioState.new(cfg.account.starting_cash)
     broker = broker or make_broker(cfg, state)
@@ -91,8 +123,12 @@ def run_once(cfg: Config, provider: PriceProvider, *, execute: bool = False,
     reasons = {a.ticker: a.reason for a in decision.actions}
     orders = build_orders(decision.target, current, priced, last, equity, cash, cfg.execution, reasons)
 
+    blocked = _trading_blocked(provider, broker, date, clock) if execute else None
+    if blocked:
+        log.warning("not trading: %s", blocked)
+    trade = execute and not blocked
     fills: list[Fill] = []
-    if execute and orders:
+    if trade and orders:
         fills = broker.execute(orders, now)
         cash, shares = broker.snapshot()
         state.sync(shares, prices, date)
@@ -113,13 +149,14 @@ def run_once(cfg: Config, provider: PriceProvider, *, execute: bool = False,
     state.history.append({
         "time": now.isoformat(timespec="seconds"), "price_date": date.date().isoformat(),
         "equity": round(equity, 2), "cash": round(cash, 2), "regime": decision.regime.name,
-        "executed": bool(execute and orders), "synthetic": provider.is_synthetic,
+        "executed": bool(trade and orders), "synthetic": provider.is_synthetic,
+        **({"blocked": blocked} if blocked else {}),
     })
     state.save(state_path)
 
     report = render_run(decision, orders, fills, equity, cash, state.meta(), cfg,
-                        executed=execute, broker=getattr(broker, "name", "?"),
-                        synthetic=provider.is_synthetic, run_time=now)
+                        executed=trade, broker=getattr(broker, "name", "?"),
+                        synthetic=provider.is_synthetic, run_time=now, blocked=blocked)
     path = None
     if write_report:
         path = Path(cfg.account.reports_dir) / f"run_{now:%Y%m%d_%H%M%S}.md"

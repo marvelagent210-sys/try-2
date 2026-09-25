@@ -28,12 +28,17 @@ def _pct(x: float, signed: bool = False) -> str:
 
 def render_run(decision: Decision, orders: list[Order], fills: list[Fill], equity: float, cash: float,
                meta: dict[str, PositionMeta], cfg: Config, *, executed: bool, broker: str,
-               synthetic: bool, run_time: pd.Timestamp) -> str:
+               synthetic: bool, run_time: pd.Timestamp, blocked: str | None = None) -> str:
     d = decision
-    lines = [f"# Growth portfolio: {run_time:%Y-%m-%d %H:%M} (prices as of {d.date:%Y-%m-%d})", ""]
+    lines = [f"# Growth portfolio: {run_time:%Y-%m-%d %H:%M} ET (prices as of {d.date:%Y-%m-%d})", ""]
     if synthetic:
         lines += ["> **SYNTHETIC DATA**: demo prices, not the real market.", ""]
-    mode = f"EXECUTED on {broker} broker" if executed else "DRY RUN: no orders sent (use --execute)"
+    if executed:
+        mode = f"EXECUTED on {broker} broker"
+    elif blocked:
+        mode = f"NOT EXECUTED: {blocked}"
+    else:
+        mode = "DRY RUN: no orders sent (use --execute)"
     lines += [
         f"**Mode:** {mode}  ",
         f"**Regime:** {d.regime.describe(cfg.universe.benchmark)}; exposure cap {d.regime.gross_cap:.0%}  ",
