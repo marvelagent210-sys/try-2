@@ -86,6 +86,7 @@ class AccountConfig:
     starting_cash: float = 100_000.0
     state_file: str = "portfolio_state.json"
     reports_dir: str = "reports"
+    dashboard: str = "dashboard.html"   # phone-friendly page rewritten every cycle ("" = off)
     alpaca_paper: bool = True           # False sends orders to a LIVE Alpaca account
     history_days: int = 800             # calendar days of prices to fetch
 
@@ -189,5 +190,6 @@ broker = "paper"         # paper | alpaca (reads APCA_API_KEY_ID / APCA_API_SECR
 starting_cash = 100000
 state_file = "portfolio_state.json"
 reports_dir = "reports"
+dashboard = "dashboard.html"  # open on your phone, or publish it (see README)
 alpaca_paper = true
 """

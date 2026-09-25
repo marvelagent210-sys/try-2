@@ -13,6 +13,8 @@ import pandas as pd
 
 from .broker import AlpacaBroker, Broker, Fill, Order, PaperBroker, build_orders
 from .config import Config
+from .dashboard import Page, document
+from .dashboard import render as render_dashboard
 from .data import PriceProvider, align
 from .portfolio import PortfolioState
 from .report import render_run
@@ -33,6 +35,7 @@ class RunResult:
     cash: float
     report: str
     report_path: Path | None
+    dashboard: Page
 
 
 def make_broker(cfg: Config, state: PortfolioState) -> Broker:
@@ -157,9 +160,16 @@ def run_once(cfg: Config, provider: PriceProvider, *, execute: bool = False,
     report = render_run(decision, orders, fills, equity, cash, state.meta(), cfg,
                         executed=trade, broker=getattr(broker, "name", "?"),
                         synthetic=provider.is_synthetic, run_time=now, blocked=blocked)
+    page = render_dashboard(state, decision, orders, fills, prices, cfg, equity=equity, cash=cash,
+                            executed=trade, blocked=blocked, broker=getattr(broker, "name", "?"),
+                            synthetic=provider.is_synthetic, run_time=now)
     path = None
     if write_report:
         path = Path(cfg.account.reports_dir) / f"run_{now:%Y%m%d_%H%M%S}.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(report)
-    return RunResult(decision, orders, fills, equity, cash, report, path)
+        if cfg.account.dashboard:
+            dash = Path(cfg.account.dashboard)
+            dash.parent.mkdir(parents=True, exist_ok=True)
+            dash.write_text(document(page))
+    return RunResult(decision, orders, fills, equity, cash, report, path, page)

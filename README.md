@@ -85,6 +85,20 @@ the newest price bar is older than the last session that has opened, or when a
 paper order would fill while the market is closed. Either would give the ledger
 fills at prices nobody could actually trade at.
 
+### On your phone
+
+Every cycle also rewrites a phone-friendly dashboard. It shows the portfolio
+value, the return against SPY, holdings with their stop levels, what the latest
+cycle decided and why, and the next ideas in line. The page is a single
+self-contained HTML file with no outside requests, in light and dark themes.
+
+- **Locally** it is `dashboard.html` (`[account] dashboard` sets the path).
+- **From GitHub**, the scheduled workflow writes it to `docs/index.html`. Turn
+  on GitHub Pages once (repo **Settings > Pages > Deploy from a branch > `main` /
+  `/docs`**) and it is served at `https://<user>.github.io/<repo>/`, refreshed
+  every cycle. Pages sites are public, like the repo's `portfolio/` folder.
+  In Safari or Chrome, **Add to Home Screen** gives it an app icon.
+
 ### Real brokerage (Alpaca)
 
 Set `broker = "alpaca"` under `[account]` and export `APCA_API_KEY_ID` /
@@ -151,6 +165,7 @@ growthpm/
   broker.py      order building, paper broker, Alpaca broker
   engine.py      one live cycle: data -> decision -> orders -> report
   backtest.py    walk-forward backtest on the same decision code
+  dashboard.py   phone-first HTML dashboard, rewritten every cycle
   cli.py         growthpm init | run | watch | status | backtest
 tests/           pytest suite (no network needed)
 ```

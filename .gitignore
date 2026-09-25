@@ -7,3 +7,4 @@ __pycache__/
 /reports/
 /portfolio_state.json
 /config.toml
+/dashboard.html

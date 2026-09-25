@@ -10,3 +10,4 @@ alpaca_paper = true
 starting_cash = 100000
 state_file = "portfolio/state.json"
 reports_dir = "portfolio/reports"
+dashboard = "docs/index.html"  # served by GitHub Pages (Settings > Pages > main /docs)

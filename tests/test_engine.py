@@ -95,3 +95,17 @@ def test_last_session():
     assert last_session(pd.Timestamp("2026-09-23 10:00", tz=ny)) == pd.Timestamp("2026-09-23")
     assert last_session(pd.Timestamp("2026-09-26 12:00", tz=ny)) == pd.Timestamp("2026-09-25")  # Saturday
     assert last_session(pd.Timestamp("2026-09-28 08:00", tz=ny)) == pd.Timestamp("2026-09-25")  # Monday pre-open
+
+
+def test_dashboard_is_written_each_cycle(workdir, etf_cfg):
+    provider = SyntheticProvider(seed=3, end=END)
+    run_once(etf_cfg, provider, execute=True, now=pd.Timestamp("2026-06-29 15:45"))
+    result = run_once(etf_cfg, SyntheticProvider(seed=3, end=END), execute=True, now=pd.Timestamp("2026-06-30 15:45"))
+    html = (workdir / "dashboard.html").read_text()
+    assert html.startswith("<!doctype html>") and 'name="viewport"' in html
+    assert "<title>growthpm Portfolio</title>" in html and "Synthetic demo data" in html
+    state = PortfolioState.load(workdir / "portfolio_state.json")
+    for ticker in state.holdings:
+        assert f'<span class="tk">{ticker}</span>' in html
+    assert result.dashboard.fragment().startswith("<title>")
+    assert '"series": [' in html
